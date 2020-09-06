@@ -1,6 +1,5 @@
-import { SynchronousPromise, UnresolvedSynchronousPromise  } from "synchronous-promise";
+import { SynchronousPromise  } from "synchronous-promise";
 import MockAxios from "../lib/index";
-import { MockAxiosInstance } from "../lib/mock-axios";
 
 describe("MockAxios", () => {
     afterEach(() => {
@@ -40,9 +39,6 @@ describe("MockAxios", () => {
         it("`all` should return a promise", () => {
             const promise = Promise.resolve("");
             expect(MockAxios.all([promise])).toBeInstanceOf(Promise);
-        });
-        it("`create` should return an instance of MockAxios itself", () => {
-            expect(MockAxios.create()).toBeInstanceOf(MockAxiosInstance);
         });
         it("`create` should return different instances for subsequent calls", () => {
             expect(MockAxios.create()).not.toBe(MockAxios.create());

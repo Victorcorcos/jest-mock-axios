@@ -29,6 +29,7 @@ const _checkCriteria = (item: AxiosMockQueueItem, criteria: AxiosMockRequestCrit
     return true;
 };
 
+
 export class MockAxiosInstance {
 
     /** a FIFO queue of pending request */
@@ -146,7 +147,7 @@ export class MockAxiosInstance {
      */
     popQueueItem = (queueItem: SynchronousPromise<any> | AxiosMockQueueItem = null) => {
         // first let's pretend the param is a queue item
-        const request: AxiosMockQueueItem = MockAxios.popRequest(
+        const request: AxiosMockQueueItem = this.popRequest(
             queueItem as AxiosMockQueueItem,
         );
 
@@ -257,7 +258,7 @@ export class MockAxiosInstance {
         return this._pending_requests;
     };
 
-    reset = () => {
+    private resetMocks = () => {
         // remove all the requests
         this._pending_requests.splice(0, this._pending_requests.length);
 
@@ -270,23 +271,36 @@ export class MockAxiosInstance {
         this.head.mockClear();
         this.options.mockClear();
         this.request.mockClear();
-        MockAxios.all.mockClear();
     };
+
+    reset = () => {
+        this.resetMocks();
+    }
 }
 
-// @ts-ignore
-const MockAxios: AxiosMockType = new MockAxiosInstance();
+function createInstance(): AxiosMockType {
+    const context = new MockAxiosInstance();
+    const instance = (jest.fn((config) => context.request(config)) as unknown) as AxiosMockType;
 
-MockAxios.all = jest.fn((values) => Promise.all(values));
-// @ts-ignore
-MockAxios.create = jest.fn(() => new MockAxiosInstance());
+    return Object.assign(instance, context);
+}
 
+// Create the default instance to be exported
+const axios = createInstance();
 
-MockAxios.Cancel = Cancel;
-MockAxios.CancelToken = CancelToken;
-MockAxios.isCancel = (u): u is Cancel => {
+axios.all = jest.fn((values) => Promise.all(values));
+axios.create = jest.fn(() => createInstance());
+axios.reset = () => {
+    // @ts-ignore
+    axios.resetMocks();
+    axios.all.mockClear();
+}
+
+axios.Cancel = Cancel;
+axios.CancelToken = CancelToken;
+axios.isCancel = (u): u is Cancel => {
     return !!(u && u.__CANCEL__);
 };
 
 // this is a singleton object
-export default MockAxios;
+export default axios;
